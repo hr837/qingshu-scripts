@@ -9,7 +9,7 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     var _a;
@@ -138,29 +138,53 @@
     const ACTIVE_CLASS = 'option-label-preview-active'
     function fixElAnswer(el) {
         el.style.display = '';
-        const rightWrap = el.querySelector('.question-detail-type .question-header-right');
 
-        const correctValue = rightWrap.querySelector('.question-detail-choice-solution').innerText
-        for (let index = 1; index < rightWrap.childElementCount; index++) {
-            rightWrap.removeChild(rightWrap.children[1])
+        const typeEl = el.querySelector('.question-detail-type .question-header-left')
+        const type = typeEl.innerText.replace(/\（[\S]+$/, '')
+        typeEl.innerText = type;
+
+
+
+        if (type.includes('问答题')) {
+            el.querySelector('.question-detail-type .question-header-right')?.remove();
+            el.querySelector('.question-detail-solution')?.remove();
+            el.querySelector('.question-detail-solution-icon-wrapper')?.remove();
+            el.querySelector('.question-detail-description').style.paddingBottom = '0';
+        } else if (type.includes('单选题')) {
+            const correctValue  = el.querySelector('.question-detail-choice-solution').innerText;
+            el.querySelector('.question-detail-answer-desc')?.remove();
+            el.querySelector('.question-detail-type .question-header-right')?.remove();
+            const options = el.querySelectorAll('.question-detail-option')
+            options.forEach(op => {
+                if (op.firstElementChild.innerText === correctValue) {
+                    op.firstElementChild.classList.add(ACTIVE_CLASS);
+                    op.style.paddingBottom = '0';
+                } else {
+                    op.remove()
+                }
+            });
+        } else if(type.includes('判断题')){
+            el.querySelector('.question-detail-type .question-header-right')?.remove();
+            el.querySelectorAll('.question-detail-option').forEach(op => {
+                const correctValueEl = op.querySelector('input[type="radio"][checked]')
+                if(!correctValueEl){
+                    op.remove()
+                }
+            });
+            el.querySelector('.question-detail-solution')?.remove();
+            el.querySelector('.question-detail-solution')?.remove();
         }
-
-        const options = el.querySelectorAll('.question-detail-option')
-
-        options.forEach(op => {
-            if (op.firstElementChild.innerText === correctValue) {
-                op.firstElementChild.classList.add(ACTIVE_CLASS);
-            } else {
-                op.firstElementChild.classList.remove(ACTIVE_CLASS);
-            }
-        });
     }
 
     function fixAnswerClick() {
         const page = document.querySelector('.paper-container');
-        page.removeChild(document.querySelector('.question-controller-wrapper'));
+        page.removeChild(page.querySelector('.question-controller-wrapper'));
+        document.querySelector('.answer-sheet-container')?.remove();
+        const container = document.querySelector('.quiz-container')
+        container.style.width = '100%';
 
-        const list = document.querySelectorAll('.question-detail-container');
+
+        const list = page.querySelectorAll('.question-detail-container');
         list.forEach(fixElAnswer);
     }
 
